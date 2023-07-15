@@ -5,7 +5,7 @@ GhostNap is my implementation of sleep obfuscation in Nim.
 It protects the shellcode implant, but also protects the reflective DLL's loaded by the shellcode, as Meterpreter and Cobalt Strike beacons love to do.
 
 The traditional proof:
-![](/yay.PNG)
+![](/yay.png)
 
 # Why
 Most of the sleep obfuscation techniques I encountered, were protecting the image. Regarding protecting shellcodes, [ShellGhost](https://github.com/lem0nSec/ShellGhost) is really awesome, but the only other I know - [ShellcodeFluctuation](https://github.com/mgeeky/ShellcodeFluctuation), wasn't worked good for me. 
