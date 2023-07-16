@@ -1,5 +1,4 @@
 
-
 # GhostNap
 GhostNap is my implementation of sleep obfuscation in Nim.
 It protects the shellcode implant, but also protects the reflective DLL's loaded by the shellcode, as Meterpreter and Cobalt Strike beacons love to do.
@@ -17,7 +16,7 @@ It also coded in Nim - which is the thing :yellow_heart:
 2. Allocates memory for the shellcode implant, then change the protection to `PAGE_EXECUTE_READWRITE`.
 3. Installs a hook on `kernel32:VirtualAlloc` (so your implant must not use lower calls like `NtAllocateVirtualMemory`)
 4. Copies the shellcode, and executes it via Fiber or by the `CertEnumSystemStore` callback.
-5. Any call to `VirtualAlloc` is hooked, and the permission is being compared to `PAGE_READWRITE` | `PAGE_EXECUTE_READ` | `PAGE_EXECUTE_READWRITE` - if yes, we're going to protect this memory page also.
+5. Any invocation of `VirtualAlloc` is intercepted, and the permission is compared against `PAGE_READWRITE`, `PAGE_EXECUTE_READ`, or `PAGE_EXECUTE_READWRITE`. If the comparison yields a positive result, we proceed to protect the corresponding memory page as well.
 6. Any call to `Sleep` will:
    1. Remove the `X` permission from the shellcode and any other protected page.
    2. Encode the shellcode and any other protected page by single byte xor, or by RC4 using `SystemFunction032`.
