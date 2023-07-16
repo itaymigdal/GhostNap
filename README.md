@@ -14,7 +14,7 @@ It also coded in Nim - which is the thing :yellow_heart:
 
 ## How
 1. Installs a hook on `kernel32:Sleep` (so your implant must use it).
-2. Allocates executable memory for the shellcode implant. can be improved by allocating non-executable memory and then flip it to executable, but I'm lazy.
+2. Allocates memory for the shellcode implant, then change the protection to `PAGE_EXECUTE_READWRITE`.
 3. Installs a hook on `kernel32:VirtualAlloc` (so your implant must not use lower calls like `NtAllocateVirtualMemory`)
 4. Copies the shellcode, and executes it via Fiber or by the `CertEnumSystemStore` callback.
 5. Any call to `VirtualAlloc` is hooked, and the permission is being compared to `PAGE_READWRITE` | `PAGE_EXECUTE_READ` | `PAGE_EXECUTE_READWRITE` - if yes, we're going to protect this memory page also.
