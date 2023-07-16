@@ -154,7 +154,7 @@ proc mySleep(dwMilliseconds: DWORD) {.stdcall, minhook: Sleep.} =
         # Add X permission
         VirtualProtect(page[0], page[1], PAGE_EXECUTE_READWRITE, addr oldProtection)
 
-        when not defined(release): echo "[i] Existing mySleep"
+        when not defined(release): echo "[i] Exiting mySleep"
 
 
 proc myVirtualAlloc(lpAddress: LPVOID, dwSize: SIZE_T, flAllocationType: DWORD, flProtect: DWORD): LPVOID {.stdcall, minhook: VirtualAlloc.} =
